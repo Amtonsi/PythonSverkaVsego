@@ -1,0 +1,745 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Сравнение файлов</title>
+  <style>
+    :root {
+      --app: #eef2f6;
+      --surface: #ffffff;
+      --surface-2: #f7f9fc;
+      --surface-3: #edf3f8;
+      --ink: #111827;
+      --muted: #667085;
+      --line: #d6dde8;
+      --line-strong: #b9c5d6;
+      --blue: #2563eb;
+      --teal: #0f766e;
+      --red: #b42318;
+      --green: #087443;
+      --amber: #b54708;
+      --old-bg: #fff1f0;
+      --new-bg: #ecfdf3;
+      --warn-bg: #fffaeb;
+      --focus: 0 0 0 3px rgba(37, 99, 235, .18);
+      --shadow: 0 18px 44px rgba(31, 41, 55, .12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--app);
+      color: var(--ink);
+      font-family: "Segoe UI", Arial, sans-serif;
+      letter-spacing: 0;
+    }
+
+    .shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: 48px 64px 1fr 42px;
+    }
+
+    .titlebar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      background: #111827;
+      color: #f9fafb;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      font-weight: 650;
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 750;
+      background: linear-gradient(90deg, #ffffff 0%, #dbeafe 48%, #99f6e4 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .brand-tag {
+      height: 22px;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 8px;
+      border: 1px solid rgba(153, 246, 228, .34);
+      border-radius: 999px;
+      color: #99f6e4;
+      background: rgba(15, 118, 110, .16);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .mark {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, rgba(37, 99, 235, .95), rgba(15, 118, 110, .95));
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 13px;
+      box-shadow: 0 8px 22px rgba(37, 99, 235, .28);
+    }
+
+    .window-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .win-dot {
+      width: 34px;
+      height: 28px;
+      border-radius: 5px;
+      display: grid;
+      place-items: center;
+      color: #cbd5e1;
+      font-size: 13px;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 16px;
+      padding: 10px 18px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .file-pair {
+      display: flex;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .file-chip {
+      min-width: 220px;
+      max-width: 330px;
+      height: 42px;
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr);
+      align-items: center;
+      gap: 9px;
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--surface-2);
+    }
+
+    .file-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--blue);
+    }
+
+    .file-meta {
+      min-width: 0;
+      line-height: 1.15;
+    }
+
+    .file-name {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .file-note {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    button {
+      height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 0 12px;
+    }
+
+    button.primary {
+      border-color: var(--blue);
+      background: var(--blue);
+      color: #fff;
+    }
+
+    button.icon {
+      width: 34px;
+      padding: 0;
+      font-size: 17px;
+      line-height: 1;
+    }
+
+    button:focus {
+      outline: none;
+      box-shadow: var(--focus);
+    }
+
+    .privacy {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      color: var(--teal);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .privacy-pill {
+      padding: 6px 9px;
+      border: 1px solid #99d3ca;
+      border-radius: 999px;
+      background: #ecfdf8;
+    }
+
+    .workspace {
+      min-height: 0;
+      padding: 16px 18px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 352px;
+      gap: 14px;
+    }
+
+    .compare-area {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: 38px minmax(0, 1fr);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .compare-tabs {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10px 0 12px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface-2);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      height: 100%;
+    }
+
+    .tab {
+      height: 30px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .tab.active {
+      background: #fff;
+      color: var(--blue);
+      border: 1px solid var(--line);
+    }
+
+    .view-controls {
+      display: flex;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      align-items: center;
+    }
+
+    .viewer-grid {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .viewer {
+      min-width: 0;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: 34px minmax(0, 1fr);
+      border-right: 1px solid var(--line);
+    }
+
+    .viewer:last-child { border-right: 0; }
+
+    .viewer-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .viewer-body {
+      min-height: 0;
+      overflow: hidden;
+      background:
+        linear-gradient(90deg, #f8fafc 47px, transparent 47px),
+        #fff;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.55;
+      position: relative;
+    }
+
+    .line {
+      display: grid;
+      grid-template-columns: 48px minmax(0, 1fr);
+      min-height: 26px;
+    }
+
+    .ln {
+      padding: 3px 8px;
+      color: #8a95a8;
+      text-align: right;
+      user-select: none;
+    }
+
+    .txt {
+      min-width: 0;
+      padding: 3px 12px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      border-left: 1px solid #eef2f7;
+    }
+
+    .line.old .txt { background: var(--old-bg); color: var(--red); }
+    .line.new .txt { background: var(--new-bg); color: var(--green); }
+    .line.warn .txt { background: var(--warn-bg); color: var(--amber); }
+    .line.focus .txt {
+      outline: 2px solid rgba(37, 99, 235, .45);
+      outline-offset: -2px;
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+
+    .sidebar {
+      min-height: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr);
+      overflow: hidden;
+    }
+
+    .summary {
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .summary h2 {
+      margin: 0 0 10px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .stat {
+      min-width: 0;
+      padding: 9px 8px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--surface-2);
+    }
+
+    .num {
+      font-size: 18px;
+      line-height: 1;
+      font-weight: 750;
+    }
+
+    .cap {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .filters {
+      padding: 10px 12px;
+      display: flex;
+      gap: 7px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface-2);
+    }
+
+    .filter {
+      min-height: 28px;
+      display: flex;
+      align-items: center;
+      padding: 0 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .filter.active {
+      border-color: #a7c1ff;
+      color: var(--blue);
+      background: #eff6ff;
+    }
+
+    .changes {
+      min-height: 0;
+      overflow: hidden;
+      padding: 10px;
+      display: grid;
+      align-content: start;
+      gap: 8px;
+    }
+
+    .change {
+      display: grid;
+      grid-template-columns: 4px minmax(0, 1fr);
+      gap: 10px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fff;
+    }
+
+    .change.active {
+      border-color: #8fb3ff;
+      background: #f5f8ff;
+    }
+
+    .stripe { border-radius: 999px; background: var(--blue); }
+    .stripe.red { background: var(--red); }
+    .stripe.green { background: var(--green); }
+    .stripe.amber { background: var(--amber); }
+
+    .change-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .change-place {
+      color: var(--muted);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .change-text {
+      display: grid;
+      gap: 4px;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .mini-old, .mini-new {
+      padding: 5px 6px;
+      border-radius: 5px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .mini-old { background: var(--old-bg); color: var(--red); }
+    .mini-new { background: var(--new-bg); color: var(--green); }
+
+    .statusbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      column-gap: 18px;
+      padding: 0 18px;
+      border-top: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .status-items {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .status-right {
+      display: grid;
+      justify-items: end;
+      gap: 2px;
+      line-height: 1.05;
+      min-width: 260px;
+    }
+
+    .tech {
+      color: #6b7280;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .credit {
+      color: #8b95a7;
+      font-size: 10px;
+      font-weight: 650;
+      opacity: .74;
+    }
+
+    .ok { color: var(--teal); font-weight: 650; }
+
+    @media (max-width: 980px) {
+      .workspace { grid-template-columns: 1fr; }
+      .file-pair { flex-wrap: wrap; }
+      .toolbar { grid-template-columns: 1fr; }
+      .privacy { justify-content: flex-start; }
+      .sidebar { min-height: 420px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="titlebar">
+      <div class="brand">
+        <div class="mark">СФ</div>
+        <span class="brand-title">Сравнение файлов</span>
+        <span class="brand-tag">2026</span>
+      </div>
+      <div class="window-actions" aria-hidden="true">
+        <div class="win-dot">-</div>
+        <div class="win-dot">□</div>
+        <div class="win-dot">×</div>
+      </div>
+    </header>
+
+    <section class="toolbar">
+      <div class="file-pair">
+        <div class="file-chip">
+          <div class="file-icon">OLD</div>
+          <div class="file-meta">
+            <div class="file-name">contract_v12_original.pdf</div>
+            <div class="file-note">PDF, OCR: rus+eng, 18 страниц</div>
+          </div>
+        </div>
+        <div class="file-chip">
+          <div class="file-icon" style="background:var(--teal)">NEW</div>
+          <div class="file-meta">
+            <div class="file-name">contract_v13_signed_scan.pdf</div>
+            <div class="file-note">Скан PDF, OCR: rus+eng, 18 страниц</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="icon" title="Открыть файл">+</button>
+        <button class="primary">Сравнить</button>
+        <button>Экспорт отчета</button>
+        <button class="icon" title="Настройки">⚙</button>
+      </div>
+
+      <div class="privacy">
+        <span class="privacy-pill">Строгий локальный режим</span>
+      </div>
+    </section>
+
+    <main class="workspace">
+      <section class="compare-area">
+        <div class="compare-tabs">
+          <div class="tabs">
+            <div class="tab active">Текст</div>
+            <div class="tab">Страницы</div>
+            <div class="tab">OCR</div>
+            <div class="tab">Hex</div>
+          </div>
+          <div class="view-controls">
+            <span>Синхронная прокрутка</span>
+            <button class="icon" title="Предыдущее изменение">‹</button>
+            <button class="icon" title="Следующее изменение">›</button>
+          </div>
+        </div>
+
+        <div class="viewer-grid">
+          <article class="viewer">
+            <div class="viewer-head">
+              <span>Было</span>
+              <span>стр. 4 / строка 42</span>
+            </div>
+            <div class="viewer-body">
+              <div class="line"><div class="ln">38</div><div class="txt">4.1. Исполнитель обязуется выполнить работы в срок.</div></div>
+              <div class="line"><div class="ln">39</div><div class="txt">4.2. Заказчик предоставляет исходные данные.</div></div>
+              <div class="line old"><div class="ln">40</div><div class="txt">4.3. Срок оплаты составляет 10 банковских дней.</div></div>
+              <div class="line focus"><div class="ln">41</div><div class="txt">4.4. Штраф за просрочку составляет 0,05% за каждый день.</div></div>
+              <div class="line"><div class="ln">42</div><div class="txt">4.5. Все приложения являются частью договора.</div></div>
+              <div class="line warn"><div class="ln">43</div><div class="txt">OCR confidence: 91%</div></div>
+              <div class="line"><div class="ln">44</div><div class="txt">5.1. Настоящий договор вступает в силу после подписания.</div></div>
+              <div class="line"><div class="ln">45</div><div class="txt">5.2. Споры рассматриваются в установленном порядке.</div></div>
+            </div>
+          </article>
+
+          <article class="viewer">
+            <div class="viewer-head">
+              <span>Стало</span>
+              <span>стр. 4 / строка 42</span>
+            </div>
+            <div class="viewer-body">
+              <div class="line"><div class="ln">38</div><div class="txt">4.1. Исполнитель обязуется выполнить работы в срок.</div></div>
+              <div class="line"><div class="ln">39</div><div class="txt">4.2. Заказчик предоставляет исходные данные.</div></div>
+              <div class="line new"><div class="ln">40</div><div class="txt">4.3. Срок оплаты составляет 7 банковских дней.</div></div>
+              <div class="line focus"><div class="ln">41</div><div class="txt">4.4. Штраф за просрочку составляет 0,1% за каждый день.</div></div>
+              <div class="line"><div class="ln">42</div><div class="txt">4.5. Все приложения являются частью договора.</div></div>
+              <div class="line warn"><div class="ln">43</div><div class="txt">OCR confidence: 88%</div></div>
+              <div class="line"><div class="ln">44</div><div class="txt">5.1. Настоящий договор вступает в силу после подписания.</div></div>
+              <div class="line"><div class="ln">45</div><div class="txt">5.2. Споры рассматриваются в установленном порядке.</div></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <aside class="sidebar">
+        <section class="summary">
+          <h2>Найдено 24 изменения</h2>
+          <div class="stats">
+            <div class="stat">
+              <div class="num" style="color:var(--red)">7</div>
+              <div class="cap">удалено</div>
+            </div>
+            <div class="stat">
+              <div class="num" style="color:var(--green)">11</div>
+              <div class="cap">добавлено</div>
+            </div>
+            <div class="stat">
+              <div class="num" style="color:var(--amber)">6</div>
+              <div class="cap">OCR</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="filters">
+          <div class="filter active">Все</div>
+          <div class="filter">Текст</div>
+          <div class="filter">OCR</div>
+          <div class="filter">Риски</div>
+        </section>
+
+        <section class="changes">
+          <article class="change active">
+            <div class="stripe red"></div>
+            <div>
+              <div class="change-title">
+                <span>Срок оплаты</span>
+                <span class="change-place">стр. 4, строка 40</span>
+              </div>
+              <div class="change-text">
+                <div class="mini-old">- 10 банковских дней</div>
+                <div class="mini-new">+ 7 банковских дней</div>
+              </div>
+            </div>
+          </article>
+
+          <article class="change">
+            <div class="stripe amber"></div>
+            <div>
+              <div class="change-title">
+                <span>Штраф</span>
+                <span class="change-place">стр. 4, строка 41</span>
+              </div>
+              <div class="change-text">
+                <div class="mini-old">- 0,05% за каждый день</div>
+                <div class="mini-new">+ 0,1% за каждый день</div>
+              </div>
+            </div>
+          </article>
+
+          <article class="change">
+            <div class="stripe green"></div>
+            <div>
+              <div class="change-title">
+                <span>Новый пункт</span>
+                <span class="change-place">стр. 7, строка 82</span>
+              </div>
+              <div class="change-text">
+                <div class="mini-new">+ 6.4. Стороны допускают электронный документооборот.</div>
+              </div>
+            </div>
+          </article>
+
+          <article class="change">
+            <div class="stripe"></div>
+            <div>
+              <div class="change-title">
+                <span>Config key</span>
+                <span class="change-place">app.yaml:18</span>
+              </div>
+              <div class="change-text">
+                <div class="mini-old">- timeout: 30</div>
+                <div class="mini-new">+ timeout: 45</div>
+              </div>
+            </div>
+          </article>
+        </section>
+      </aside>
+    </main>
+
+    <footer class="statusbar">
+      <div class="status-items">
+        <span class="ok">Готово</span>
+        <span>Сравнение выполнено локально</span>
+        <span>Временные данные будут удалены при закрытии</span>
+      </div>
+      <div class="status-right">
+        <span class="tech">UTF-8 | OCR rus+eng | PySide6</span>
+        <span class="credit">Разработал: Абдрахманов Амаль Даулетович</span>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

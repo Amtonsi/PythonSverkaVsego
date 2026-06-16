@@ -1,0 +1,32 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+*.spec~
+.idea/
+
+# Local registry/database/runtime files
+registry.sqlite3
+registry_snapshots/
+backups/
+*.db
+*.sqlite
+*.sqlite3
+*.log
+
+# Real object configs and policy exports must not be published
+/*.cfg
+/*.conf
+/*.ini
+/*.klp
+/*.bak
+
+# Local generated reports and archives
+outputs/
+reports/
+*.zip
+*.html
+!design/*.html

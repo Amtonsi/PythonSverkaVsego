@@ -1,0 +1,4 @@
+host=localhost
+timeout=45
+enabled=true
+mode=strict
