@@ -2671,11 +2671,13 @@ class MainWindow(QMainWindow):
 
     def _compare(self) -> None:
         if self.left_path is None or self.right_path is None:
+            self._reset_compare_state()
             self._show_message(QMessageBox.Icon.Warning, "Не выбраны файлы", "Выберите два файла для сравнения.")
             return
         if self.compare_thread is not None:
             return
 
+        self._reset_compare_state()
         self._set_compare_busy(True)
         self.compare_thread = QThread(self)
         self.compare_worker = CompareWorker(self.left_path, self.right_path)
@@ -2724,6 +2726,7 @@ class MainWindow(QMainWindow):
         self._set_compare_busy(False)
 
     def _on_compare_failed(self, title: str, message: str) -> None:
+        self._reset_compare_state()
         self._set_compare_busy(False)
         self.status_ready.setText("Ошибка")
         self.status_text.setText(message)
@@ -2733,9 +2736,24 @@ class MainWindow(QMainWindow):
             self._show_message(QMessageBox.Icon.Critical, title, message)
 
     def _on_compare_canceled(self) -> None:
+        self._reset_compare_state()
         self._set_compare_busy(False)
         self.status_ready.setText("Готово")
         self.status_text.setText("Сравнение отменено")
+
+    def _reset_compare_state(self) -> None:
+        self.result = None
+        self.visible_changes = []
+        self.changes_list.clear()
+        self.summary.setText("Найдено 0 изменений")
+        self.removed_stat.number_label.setText("0")  # type: ignore[attr-defined]
+        self.added_stat.number_label.setText("0")  # type: ignore[attr-defined]
+        self.ocr_stat.number_label.setText("0")  # type: ignore[attr-defined]
+        self.left_view["place"].setText("")
+        self.right_view["place"].setText("")
+        self.left_view["text"].setPlainText("")
+        self.right_view["text"].setPlainText("")
+        self._render_compare_view_mode()
 
     def _clear_compare_worker(self) -> None:
         self.compare_thread = None
@@ -2772,8 +2790,12 @@ class MainWindow(QMainWindow):
         change = self.visible_changes[row]
         if change.source_location:
             self.left_view["place"].setText(compact_location(change.source_location))
+        else:
+            self.left_view["place"].setText("")
         if change.target_location:
             self.right_view["place"].setText(compact_location(change.target_location))
+        else:
+            self.right_view["place"].setText("")
         self._scroll_to_change(change)
 
     def _scroll_to_change(self, change: Change) -> None:

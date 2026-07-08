@@ -34,16 +34,21 @@ def _extract_pdf_lines(path: Path) -> list[str]:
     except ModuleNotFoundError as exc:
         raise AnalyzerDependencyError("Для сравнения PDF установите PyMuPDF.") from exc
 
-    document = fitz.open(path)
     lines: list[str] = []
-    for page_number, page in enumerate(document, start=1):
-        text = page.get_text("text").strip()
-        if not text:
-            text = _ocr_page(page)
-        for raw_line in text.splitlines():
-            line = raw_line.strip()
-            if line:
-                lines.append(f"page {page_number}: {line}")
+    with fitz.open(path) as document:
+        for page_number, page in enumerate(document, start=1):
+            text = page.get_text("text").strip()
+            if not text:
+                try:
+                    text = _ocr_page(page)
+                except AnalyzerDependencyError:
+                    continue
+                except Exception:
+                    continue
+            for raw_line in text.splitlines():
+                line = raw_line.strip()
+                if line:
+                    lines.append(f"page {page_number}: {line}")
     return lines
 
 

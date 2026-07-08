@@ -12,8 +12,11 @@ class BinaryAnalyzer(Analyzer):
         max_len = max(len(left), len(right))
         change_index = 1
         offset = 0
+        max_reported_changes = 200
 
-        while offset < max_len and change_index <= 200:
+        while offset < max_len:
+            if len(changes) >= max_reported_changes:
+                break
             left_byte = left[offset : offset + 1]
             right_byte = right[offset : offset + 1]
             if left_byte == right_byte:
@@ -45,10 +48,30 @@ class BinaryAnalyzer(Analyzer):
             )
             change_index += 1
 
+        if len(changes) >= max_reported_changes and offset < max_len:
+            changes.append(
+                Change(
+                    change_id=f"binary-{len(changes) + 1}",
+                    change_type="modified",
+                    severity="warning",
+                    source_location=ChangeLocation(str(left_path)),
+                    target_location=ChangeLocation(str(right_path)),
+                    before="binary diff truncated",
+                    after=f"only first {max_reported_changes} byte-diff regions are shown",
+                    format="hex",
+                    confidence=1.0,
+                    notes="Exceeded binary diff truncation limit",
+                )
+            )
+        metadata = {
+            "left_size": str(len(left)),
+            "right_size": str(len(right)),
+            "truncated": "true" if len(changes) > max_reported_changes else "false",
+        }
         return ComparisonResult(
             left_path=str(left_path),
             right_path=str(right_path),
             file_kind="binary",
             changes=changes,
-            metadata={"left_size": str(len(left)), "right_size": str(len(right))},
+            metadata=metadata,
         )

@@ -191,7 +191,26 @@ class RegistryMonitor:
         digest: str,
         latest: FileVersion,
     ) -> None:
-        result = compare_files(Path(latest.snapshot_path), file_path)
+        try:
+            result = compare_files(Path(latest.snapshot_path), file_path)
+        except Exception as exc:
+            self.repository.update_watched_file_status(
+                watched.id,
+                digest,
+                "error",
+                str(exc),
+            )
+            self.repository.create_event(
+                watched.node_id,
+                watched.id,
+                "error",
+                message=(
+                    f"Не удалось сравнить версии {watched.label}: "
+                    f"v{latest.version_number} -> v{latest.version_number + 1}; "
+                    f"{exc.__class__.__name__}: {exc}"
+                ),
+            )
+            return
         risk_changes = [change for change in result.changes if change.severity == "risk"]
         next_version_number = latest.version_number + 1
         snapshot_path = self._store_snapshot(watched, file_path, next_version_number)
