@@ -31,6 +31,10 @@ python -m venv .venv
 
 [docs/USER_GUIDE.md](docs/USER_GUIDE.md)
 
+PDF-версия в современном стиле с иллюстрациями:
+
+[docs/USER_GUIDE.pdf](docs/USER_GUIDE.pdf)
+
 ## Сборка exe
 
 ```powershell
